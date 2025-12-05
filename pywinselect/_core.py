@@ -12,7 +12,11 @@ except ImportError:
 from typing import Literal
 
 
-def get_selected(filter_type: Literal["files", "folders"] | None = None) -> list[str]:
+def get_selected(
+    filter_type: Literal["files", "folders"] | None = None,
+    only_desktop: bool = False,
+    only_explorer: bool = False
+) -> list[str]:
     """
     Get currently selected files and folders in Windows.
     
@@ -23,24 +27,48 @@ def get_selected(filter_type: Literal["files", "folders"] | None = None) -> list
             - None: Return both files and folders (default)
             - "files": Return only files
             - "folders": Return only folders
+        only_desktop: If True, only get selection from Desktop
+        only_explorer: If True, only get selection from File Explorer
     
     Returns:
         List of absolute paths to selected items. Empty list if nothing is selected
         or nothing matches the filter.
+    
+    Raises:
+        ValueError: If both only_desktop and only_explorer are True
         
     Examples:
         >>> from pywinselect import get_selected
         >>> get_selected()
         ['C:\\file.txt', 'C:\\folder']
+        >>> get_selected(only_desktop=True)
+        ['C:\\Desktop\\file.txt']
+        >>> get_selected(only_explorer=True)
+        ['C:\\Downloads\\file.txt']
         >>> get_selected(filter_type="files")
         ['C:\\file.txt']
-        >>> get_selected(filter_type="folders")
-        ['C:\\folder']
     """
-    result = _get_from_explorer()
+    if only_desktop and only_explorer:
+        raise ValueError("Cannot set both only_desktop and only_explorer to True")
     
-    if not result:
-        result = _get_from_desktop()
+    result = []
+    
+    if only_desktop:
+        desktop_result = _get_from_desktop()
+        if desktop_result:
+            result = desktop_result
+    elif only_explorer:
+        explorer_result = _get_from_explorer()
+        if explorer_result:
+            result = explorer_result
+    else:
+        explorer_result = _get_from_explorer()
+        desktop_result = _get_from_desktop()
+        
+        if explorer_result:
+            result.extend(explorer_result)
+        if desktop_result:
+            result.extend(desktop_result)
     
     if not result:
         return []

@@ -3,7 +3,6 @@
 Get selected files and folders in Windows.
 
 ## Installation
-
 ```bash
 pip install git+https://github.com/offerrall/pywinselect
 ```
@@ -41,17 +40,21 @@ When building automation tools, you often need to know what the user has selecte
 ```python
 from pywinselect import get_selected
 
+# Get all selected items (Desktop + Explorer)
 files = get_selected()
-if files:
-    print(f"Selected: {files[0]}")
 
+# Filter by type
 only_files = get_selected(filter_type="files")
 only_folders = get_selected(filter_type="folders")
+
+# Get selection from specific location
+desktop_only = get_selected(only_desktop=True)
+explorer_only = get_selected(only_explorer=True)
 ```
 
 ## API
 
-### `get_selected(filter_type=None) -> list[str]`
+### `get_selected(filter_type=None, only_desktop=False, only_explorer=False) -> list[str]`
 
 Returns list of absolute paths to selected items.
 
@@ -60,10 +63,15 @@ Returns list of absolute paths to selected items.
   - `None` - Return both files and folders (default)
   - `"files"` - Return only files
   - `"folders"` - Return only folders
+- `only_desktop` (optional): If `True`, only get selection from Desktop
+- `only_explorer` (optional): If `True`, only get selection from File Explorer
 
 **Returns:** 
 - `list[str]` - Paths to selected files/folders
 - `[]` - Empty list if nothing is selected
+
+**Raises:**
+- `ValueError` - If both `only_desktop` and `only_explorer` are `True`
 
 **Examples:**
 ```python
@@ -75,6 +83,15 @@ Returns list of absolute paths to selected items.
 
 >>> get_selected(filter_type="folders")
 ['C:\\Users\\John\\Documents']
+
+>>> get_selected(only_desktop=True)
+['C:\\Users\\John\\Desktop\\file.txt']
+
+>>> get_selected(only_explorer=True)
+['C:\\Users\\John\\Downloads\\file.txt']
+
+>>> get_selected(only_desktop=True, only_explorer=True)
+ValueError: Cannot set both only_desktop and only_explorer to True
 ```
 
 ## How it works
